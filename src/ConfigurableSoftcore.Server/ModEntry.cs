@@ -18,6 +18,14 @@ public class ModEntry : IOnLoad
     public Task OnLoad()
     {
         var cfg = _configService.LoadOrCreate();
+
+        if (_configService.LoadError is { } error)
+        {
+            _logger.Warning(
+                $"[ConfigurableSoftcore] Could not read {_configService.ConfigPath} ({error}). " +
+                "Using default settings until the file is fixed and the server is restarted.");
+        }
+
         _logger.Success(
             $"[ConfigurableSoftcore] Loaded. Enabled={cfg.Enabled} DefaultMode={cfg.DefaultMode} " +
             $"ProfileOverrides={cfg.ProfileOverrides.Count}");

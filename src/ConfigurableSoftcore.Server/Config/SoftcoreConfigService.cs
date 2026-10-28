@@ -13,6 +13,10 @@ public sealed class SoftcoreConfigService
 
     public SoftcoreConfig Current { get; private set; } = new();
 
+    public string? LoadError { get; private set; }
+
+    public string ConfigPath => _path;
+
     public SoftcoreConfigService()
     {
         var modDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
@@ -30,6 +34,8 @@ public sealed class SoftcoreConfigService
 
     public SoftcoreConfig LoadOrCreate()
     {
+        LoadError = null;
+
         if (!File.Exists(_path))
         {
             File.WriteAllText(_path, DefaultConfigText, Encoding.UTF8);
@@ -42,8 +48,16 @@ public sealed class SoftcoreConfigService
             var text = File.ReadAllText(_path, Encoding.UTF8);
             Current = JsonSerializer.Deserialize<SoftcoreConfig>(text, _opts) ?? new SoftcoreConfig();
         }
-        catch
+        catch (JsonException ex)
         {
+            LoadError = ex.LineNumber is { } line
+                ? $"line {line + 1}, column {(ex.BytePositionInLine ?? 0) + 1}: {ex.Message}"
+                : ex.Message;
+            Current = new SoftcoreConfig();
+        }
+        catch (Exception ex)
+        {
+            LoadError = ex.Message;
             Current = new SoftcoreConfig();
         }
 
@@ -119,27 +133,26 @@ public sealed class SoftcoreConfigService
       // profile under user/profiles/ on the server. "Maps" sets the rule's Mode to apply only
       // on maps listed as true - a map left out or set to false falls back to DefaultMode.
       // Leave "Maps" out entirely (or empty) to apply the rule on every map.
-      //
-      // "ProfileOverrides": {
-      //   "68abf1e2c9c2a1f4b5d6e7f8": {
-      //     "Mode": "KeepEverything",
-      //     "Maps": {
-      //       "bigmap": false,
-      //       "woods": false,
-      //       "factory4_day": false,
-      //       "factory4_night": true,
-      //       "interchange": false,
-      //       "rezervbase": false,
-      //       "shoreline": false,
-      //       "laboratory": true,
-      //       "lighthouse": false,
-      //       "tarkovstreets": false,
-      //       "sandbox": false,
-      //       "sandbox_high": false
-      //     }
-      //   }
-      // }
-      "ProfileOverrides": {}
+      // To use the example, remove the "//" from the start of each of its lines.
+      "ProfileOverrides": {
+        // "68abf1e2c9c2a1f4b5d6e7f8": {
+        //   "Mode": "KeepEverything",
+        //   "Maps": {
+        //     "bigmap": false,
+        //     "woods": false,
+        //     "factory4_day": false,
+        //     "factory4_night": true,
+        //     "interchange": false,
+        //     "rezervbase": false,
+        //     "shoreline": false,
+        //     "laboratory": true,
+        //     "lighthouse": false,
+        //     "tarkovstreets": false,
+        //     "sandbox": false,
+        //     "sandbox_high": false
+        //   }
+        // }
+      }
     }
     """;
 }
