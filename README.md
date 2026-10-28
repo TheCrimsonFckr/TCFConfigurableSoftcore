@@ -66,6 +66,49 @@ normally (risking a duplicate return).
 
 ---
 
+## Configuring
+
+1. Start the server once with the mod installed. That creates
+   `SPT\user\mods\TCF-ConfigurableSoftcore.Server\config.jsonc` - the download doesn't include it.
+2. Close the server and edit that file in Notepad, Notepad++ or VS Code (not Word - curly quotes
+   break it).
+3. Start the server and check the console for
+   `[ConfigurableSoftcore] Loaded. Enabled=True DefaultMode=KeepGearOnly ProfileOverrides=1`.
+   The settings are only read at startup.
+
+If the file can't be read, the mod logs a warning naming the line and column, and uses the
+default settings until it's fixed. Common causes:
+
+- A missing comma between settings, or an extra `{` or `}`.
+- A misspelt mode - only `Vanilla`, `KeepEverything`, `KeepGearOnly` and `KeepEntryItems` work.
+- `ProfileOverrides` appearing twice. Only the last one counts, so an empty `"ProfileOverrides": {}`
+  after your rule wipes it out.
+- A profile id that doesn't match a file name in `SPT\user\profiles` (without `.json`).
+
+For the same rule on every profile, only `DefaultMode` needs changing. A complete file with one
+per-profile rule:
+
+```jsonc
+{
+  "Enabled": true,
+  "Debug": false,
+  "PreserveFoundInRaid": false,
+  "NotifyPlayer": true,
+  "DefaultMode": "Vanilla",
+  "ProfileOverrides": {
+    "68abf1e2c9c2a1f4b5d6e7f8": {
+      "Mode": "KeepEverything",
+      "Maps": {
+        "laboratory": true,
+        "factory4_night": true
+      }
+    }
+  }
+}
+```
+
+---
+
 ## How it works
 
 `ConfigurableInRaidHelper` (`src/ConfigurableSoftcore.Server/Services`) replaces SPT's
